@@ -1,141 +1,124 @@
-import {Component} from 'react'
-import {IoCartSharp} from 'react-icons/io5'
-import Loader from 'react-loader-spinner'
-import TabItem from '../TabList'
-import ProjectItem from '../ProjectItem'
-
-import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css'
-
 import './index.css'
 
-class Restro extends Component {
+import Loader from 'react-loader-spinner'
+
+import {Component} from 'react'
+
+// import {Link} from 'react-router-dom'
+import Header from '../Header'
+
+import TabItem from '../TabList'
+
+import ProjectItem from '../ProjectItem'
+
+const diffStates = {
+  inProgress: 'LOADING',
+  success: 'SUCCESS',
+  fail: 'FAILURE',
+}
+
+class Home extends Component {
   state = {
-    isload: true,
-    tablist: [],
-    projectlist: [],
-    activetab: '',
+    status: diffStates.inProgress,
+    activeTabId: '11',
+    data: [],
     count: 0,
   }
 
-  componentDidMount() {
-    this.getDetailsMenu()
+  onChangeActiveTab = id => {
+    this.setState({activeTabId: id})
   }
 
-  getDetailsMenu = async () => {
-    const options = {
-      method: 'GET',
-    }
-    const url =
-      'https://apis2.ccbp.in/restaurant-app/restaurant-menu-list-details'
+  componentDidMount = async () => {
+    try {
+      const response = await fetch(
+        'https://apis2.ccbp.in/restaurant-app/restaurant-menu-list-details',
+      )
+      const dataResponse = await response.json()
 
-    const response = await fetch(url, options)
-    const data = await response.json()
-    const newdata = data[0].table_menu_list
-
-    const categoryTab = newdata.map(each => ({
-      menuCategory: each.menu_category,
-      menuCategoryId: each.menu_category_id,
-    }))
-
-    const dishDetails = newdata.map(item =>
-      item.category_dishes.map(dish => ({
-        dishAvailability: dish.dish_Availability,
-        dishType: dish.dish_Type,
-        dishcalories: dish.dish_calories,
-        dishcurrency: dish.dish_currency,
-        dishid: dish.dish_id,
-        dishImage: dish.dish_image,
-        dishName: dish.dish_name,
-        dishPrice: dish.dish_price,
-        menuCategoryId: item.menu_category_id,
-        addonCat: dish.addonCat,
-        dishDescription: dish.dish_description,
-        quantity: 0,
-      })),
-    )
-
-    this.setState({
-      isload: false,
-      tablist: [...categoryTab],
-      projectlist: [...dishDetails],
-      activetab: categoryTab[0].menuCategoryId,
-    })
-  }
-
-  getFileterd = () => {
-    const {projectlist, activetab} = this.state
-    const filterdarray = projectlist.map(each =>
-      each.filter(item => activetab === item.menuCategoryId),
-    )
-    const uniquearray = filterdarray.filter(eachitem => eachitem.length > 0)
-    const onlydetails = uniquearray[0] || []
-    return onlydetails
-  }
-
-  onClickTab = tabid => {
-    this.setState({activetab: tabid})
-  }
-
-  onIncrement = dishid => {
-    this.setState(prev => ({
-      projectlist: prev.projectlist.map(each =>
-        each.map(eachindex => {
-          if (eachindex.dishid === dishid) {
-            return {...eachindex, quantity: eachindex.quantity + 1}
-          }
-          return eachindex
-        }),
-      ),
-      count: prev.count + 1,
-    }))
-  }
-
-  onDecrement = dishid => {
-    const {count} = this.state
-    if (count > 0) {
-      this.setState(prev => ({
-        projectlist: prev.projectlist.map(each =>
-          each.map(eachindex => {
-            if (eachindex.dishid === dishid) {
-              return {...eachindex, quantity: eachindex.quantity - 1}
-            }
-            return eachindex
-          }),
-        ),
-        count: prev.count - 1,
-      }))
+      this.setState({status: diffStates.success, data: dataResponse})
+    } catch (error) {
+      this.setState({status: diffStates.fail})
     }
   }
 
-  loaderfunction = () => (
-    <div className="Loader-style">
-      <Loader type="TailSpin" color="#00BFFF" height={50} width={50} />
+  renderLoader = () => (
+    <div className="loader-container">
+      <Loader type="ThreeDots" color="#0b69ff" height="50" width="50" />
     </div>
   )
 
-  renderRetro = () => {
-    const {tablist, count} = this.state
-    const filterddishes = this.getFileterd()
+  onIncrease = () => {
+    this.setState(prev => ({count: prev.count + 1}))
+  }
+
+  onDecrease = () => {
+    const {count} = this.state
+    if (count === 0) {
+      this.setState({count: 0})
+    } else {
+      this.setState(prev => ({count: prev.count - 1}))
+    }
+  }
+
+  renderSuccessView = () => {
+    const {data, activeTabId, count} = this.state
+    console.log(data)
+
+    const tableMenuData = data[0].table_menu_list
+    const currentActiveTabDishes = tableMenuData.filter(
+      each => each.menu_category_id === activeTabId,
+    )
+    const updatedTableMenuData = tableMenuData.map(each => ({
+      categoryDishes: each.category_dishes,
+      menuCategory: each.menu_category,
+      menuCategoryId: each.menu_category_id,
+      menuCategoryImage: each.menu_category_image,
+    }))
+    const updatedActiveTabDishes = {
+      categoryDishes: currentActiveTabDishes[0].category_dishes,
+      menuCategory: currentActiveTabDishes[0].menu_category,
+      menuCategoryId: currentActiveTabDishes[0].menu_category_id,
+    }
+
+    const dishesArray = updatedActiveTabDishes.categoryDishes
+    console.log(dishesArray)
+    const updatedDishesArray = dishesArray.map(dish => ({
+      addonCat: dish.addonCat,
+      dishAvailability: dish.dish_Availability,
+      dishCalories: dish.dish_calories,
+      dishCurrency: dish.dish_currency,
+      dishDescription: dish.dish_description,
+      dishId: dish.dish_id,
+      dishImage: dish.dish_image,
+      dishName: dish.dish_name,
+      dishPrice: dish.dish_price,
+      quantity: dish.quantity ? dish.quantity : 0,
+    }))
 
     return (
       <>
-        <ul className="tab-Conatiner-ul">
-          {tablist.map(each => (
-            <TabItem
-              key={each.menuCategoryId}
-              tabitemDetails={each}
-              onClickTab={this.onClickTab}
-            />
-          ))}
-        </ul>
-        <ul className="project-details-ul">
-          {filterddishes.map(projectitem => (
+        <Header count={count} />
+        <div className="dish-item-category-div">
+          <ul className="tabs-container">
+            {updatedTableMenuData.map(each => (
+              <TabItem
+                key={each.menuCategoryId}
+                isActiveTab={each.menuCategoryId === activeTabId}
+                menuData={each}
+                onChangeTabId={this.onChangeActiveTab}
+              />
+            ))}
+          </ul>
+        </div>
+        <ul className="dish-items-containers">
+          {updatedDishesArray.map(each => (
             <ProjectItem
-              key={projectitem.dishid}
-              projectdetails={projectitem}
-              onIncrement={this.onIncrement}
-              onDecrement={this.onDecrement}
               count={count}
+              dish={each}
+              key={each.dishId}
+              onIncreaseCount={this.onIncrease}
+              onDecreaseCount={this.onDecrease}
             />
           ))}
         </ul>
@@ -143,23 +126,23 @@ class Restro extends Component {
     )
   }
 
+  renderDiffViews = () => {
+    const {status} = this.state
+    switch (status) {
+      case diffStates.inProgress:
+        return this.renderLoader()
+      case diffStates.success:
+        return this.renderSuccessView()
+      case diffStates.fail:
+        return <h1 className="failure-mesg">Failed To Load...</h1>
+      default:
+        return null
+    }
+  }
+
   render() {
-    const {isload, count} = this.state
-    return (
-      <div className="Main-App-container">
-        <div className="header">
-          <h1 className="heading-heder">UNI Resto Cafe</h1>
-          <p className="myorders">My Orders</p>
-          <div className="cart-conatiner">
-            <IoCartSharp size={30} />
-            <p className="cart-p">{count}</p>
-          </div>
-        </div>
-        <hr className="horizontal-line" />
-        {isload ? this.loaderfunction() : this.renderRetro()}
-      </div>
-    )
+    return <div className="home-main-container">{this.renderDiffViews()}</div>
   }
 }
 
-export default Restro
+export default Home

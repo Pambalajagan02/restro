@@ -1,72 +1,103 @@
 import './index.css'
 
-const ProjectItem = props => {
-  const {projectdetails, onIncrement, onDecrement} = props
+import {Component} from 'react'
 
-  const onClickIncrement = () => {
-    onIncrement(projectdetails.dishid)
+class ProjectItem extends Component {
+  state = {quantity: 0}
+
+  onClickIncrease = () => {
+    this.setState(
+      prev => ({quantity: prev.quantity + 1}),
+      () => {
+        const {onIncreaseCount} = this.props
+        onIncreaseCount()
+      },
+    )
   }
 
-  const onClickDecrement = () => {
-    onDecrement(projectdetails.dishid)
-  }
-
-  const renderbutton = () => {
-    if (projectdetails.dishAvailability) {
-      return (
-        <div className="incrimentcontainer">
-          <button
-            type="button"
-            className="button-increment"
-            onClick={onClickDecrement}
-          >
-            -
-          </button>
-          <p>{projectdetails.quantity}</p>
-          <button
-            type="button"
-            className="button-increment"
-            onClick={onClickIncrement}
-          >
-            +
-          </button>
-        </div>
+  onClickDecrease = () => {
+    const {quantity} = this.state
+    if (quantity > 0) {
+      this.setState(
+        prev => ({quantity: prev.quantity - 1}),
+        () => {
+          const {onDecreaseCount} = this.props
+          onDecreaseCount()
+        },
       )
+    } else {
+      this.setState({quantity: 0})
     }
-    return <p className="not avialble">Not available</p>
   }
 
-  return (
-    <li className="project-list-item">
-      <div
-        className={
-          projectdetails.dishType === 2
-            ? `border-veg-container`
-            : `border-red-con`
-        }
-      >
-        <p
-          className={projectdetails.dishType === 2 ? `para-green` : `para-red`}
-        />
-      </div>
+  renderDisItems = () => {
+    const {dish} = this.props
+    const {quantity} = this.state
+    const {
+      dishName,
+      dishImage,
+      dishCalories,
+      dishAvailability,
+      dishCurrency,
+      dishDescription,
+      dishPrice,
+      addonCat,
+    } = dish
+    return (
+      <li className="dish-item-card">
+        <div className="circle-content-card">
+          <div className={`box  ${dishPrice > 10 ? 'high-rate-props' : ''}`}>
+            <p
+              className={`circle ${dishPrice > 10 ? 'high-rate-circle' : ''}`}
+            />
+          </div>
+          <div className="content-div">
+            <h1 className="name">{dishName}</h1>
+            <p className="money">{`${dishCurrency} ${dishPrice}`}</p>
+            <p className="description">{dishDescription}</p>
+            {dishAvailability ? (
+              <div className="qunatity-control-card">
+                <button
+                  type="button"
+                  className="control"
+                  onClick={this.onClickDecrease}
+                >
+                  -
+                </button>
+                <p className="qunatity">{quantity}</p>
+                <button
+                  type="button"
+                  className="control"
+                  onClick={this.onClickIncrease}
+                >
+                  +
+                </button>
+              </div>
+            ) : (
+              <p className="not-availble">Not available</p>
+            )}
 
-      <div className="padd">
-        <h1 className="dishname">{projectdetails.dishName}</h1>
-        <p>
-          {projectdetails.dishcurrency} {projectdetails.dishPrice}
-        </p>
-        <p>{projectdetails.dishDescription}</p>
+            {addonCat.length ? (
+              <p className="customization-text">Customizations available</p>
+            ) : (
+              ''
+            )}
+          </div>
+        </div>
+        <p className="calories-num calories-num-sm">{`${dishCalories} Calories`}</p>
+        <div className="cal-img-card">
+          <p className="calories-num calories-num-lg">
+            {dishCalories} calories
+          </p>
+          <img className="dish-img" alt={dishName} src={dishImage} />
+        </div>
+      </li>
+    )
+  }
 
-        {renderbutton()}
-        {projectdetails.addonCat.length > 0 && <p>Customizations available</p>}
-      </div>
-      <p className="calaroies">{projectdetails.dishcalories} calories</p>
-      <img
-        src={projectdetails.dishImage}
-        alt={projectdetails.dishName}
-        className="dishimg"
-      />
-    </li>
-  )
+  render() {
+    return this.renderDisItems()
+  }
 }
+
 export default ProjectItem

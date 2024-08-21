@@ -1,6 +1,7 @@
 import './App.css'
-import Restro from './components/MainApp'
 
-const App = () => <Restro />
+import Home from './components/MainApp'
+
+const App = () => <Home />
 
 export default App
